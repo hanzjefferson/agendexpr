@@ -42,12 +42,16 @@ var (
 
 	ErrUnknownAlias = errors.New("unknown alias for an expression")
 	ErrInvalidFormat = errors.New("invalid format")
+	ErrEmptyExpr = errors.New("empty expression not allowed")
 )
 
 func Normalize(expr string) (string, error) {
 	expr = strings.TrimSpace(expr)
-	expr = strings.ToLower(expr)
+	if expr == "" {
+		return "", ErrEmptyExpr
+	}
 
+	expr = strings.ToLower(expr)
 	// resolve '@' prefix
 	if strings.HasPrefix(expr, "@") {
 		alias := aliases[strings.TrimPrefix(expr, "@")]
