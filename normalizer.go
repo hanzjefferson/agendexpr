@@ -6,16 +6,16 @@ import (
 )
 
 var (
-	aliases = map[string]string{
-		"yearly":    "0 0 0 1 1 * *",
-		"monthly":   "0 0 0 1 * * *",
-		"weekly":    "0 0 0 * * 0 *",
-		"hourly":    "0 0 * * * * *",
-		"minutely":  "0 * * * * * *",
-		"5minutes":  "0 */5 * * * * *",
-		"10minutes": "0 */10 * * * * *",
-		"30minutes": "0 */30 * * * * *",
-		"ticks":     "* * * * * * *",
+	aliases = map[string][]string{
+		"yearly":    {"0", "0", "0", "1", "1", "*", "*"},
+		"monthly":   {"0", "0", "0", "1", "*", "*", "*"},
+		"weekly":    {"0", "0", "0", "*", "*", "0", "*"},
+		"hourly":    {"0", "0", "*", "*", "*", "*", "*"},
+		"minutely":  {"0", "*", "*", "*", "*", "*", "*"},
+		"5minutes":  {"0", "*/5", "*", "*", "*", "*", "*"},
+		"10minutes": {"0", "*/10", "*", "*", "*", "*", "*"},
+		"30minutes": {"0", "*/30", "*", "*", "*", "*", "*"},
+		"ticks":     {"*", "*", "*", "*", "*", "*", "*"},
 	}
 
 	dowLiteralReplacer = strings.NewReplacer(
@@ -49,25 +49,25 @@ var (
 	ErrUnexpectedLiteral = errors.New("uexpected literal position")
 )
 
-func Normalize(expr string) (string, error) {
+func normalize(expr string) ([]string, error) {
 	expr = strings.TrimSpace(expr)
 	if expr == "" {
-		return "", ErrEmptyExpr
+		return nil, ErrEmptyExpr
 	}
 
 	expr = strings.ToLower(expr)
 	// resolve '@' prefix
 	if strings.HasPrefix(expr, "@") {
 		alias := aliases[strings.TrimPrefix(expr, "@")]
-		if alias == "" {
-			return "", ErrUnknownAlias
+		if alias == nil {
+			return nil, ErrUnknownAlias
 		}
 		return alias, nil
 	}
 
 	toks := strings.Fields(expr)
 	if len(toks) > 7 {
-		return "", ErrInvalidFormat
+		return nil, ErrInvalidFormat
 	}
 
 	for i, tok := range toks {
@@ -77,7 +77,7 @@ func Normalize(expr string) (string, error) {
 
 		for i := 0; i < len(tok); i++ {
 			if (tok[i] >= 'a' && tok[i] <= 'z') || (tok[i] >= 'A' && tok[i] <= 'Z') {
-				return "", ErrUnexpectedLiteral
+				return nil, ErrUnexpectedLiteral
 			}
 		}
 	}
@@ -90,13 +90,11 @@ func Normalize(expr string) (string, error) {
 	}
 
 	if len(toks) < 7 {
-		complete := strings.Fields(aliases["ticks"])
+		complete := aliases["ticks"]
 
 		copy(complete, toks)
 		toks = complete
 	}
 
-	expr = strings.Join(toks, " ")
-
-	return expr, nil
+	return toks, nil
 }

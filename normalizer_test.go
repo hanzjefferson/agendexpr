@@ -1,6 +1,7 @@
 package gronexpr
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -77,13 +78,13 @@ func TestNormalizer(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := Normalize(test.expr)
+			res, err := normalize(test.expr)
 			if test.expectError != nil {
 				assert.ErrorIs(t, err, test.expectError)
 				return
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, test.expectVal, res)
+			assert.Equal(t, test.expectVal, strings.Join(res, " "))
 		})
 	}
 }
