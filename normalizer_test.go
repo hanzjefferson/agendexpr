@@ -44,6 +44,12 @@ func TestNormalizer(t *testing.T) {
 			expectVal:   "0 0 0 * * 0 *",
 		},
 		{
+			name:        "literal test 3",
+			expr:        "0 0 sun * * * *",
+			expectError: ErrUnexpectedLiteral,
+			expectVal:   "",
+		},
+		{
 			name:        "shortcut test 1",
 			expr:        "*",
 			expectError: nil,
