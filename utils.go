@@ -6,22 +6,19 @@ var (
 	ErrParseDigits = errors.New("unable to parse digits")
 )
 
-type digit interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64
-}
 
-func parseDigits[T digit](str string) (T, error) {
+func parseDigits(str string) (uint8, error) {
 	if len(str) == 0 {
 		return 0, nil
 	}
 
-	var result T
+	var result uint8
 	for i := 0; i < len(str); i++ {
 		if str[i] < '0' || str[i] > '9' {
 			return 0, ErrParseDigits
 		}
 
-		result = (result * 10) + T(str[i]-'0')
+		result = (result * 10) + uint8(str[i]-'0')
 	}
 	return result, nil
 }

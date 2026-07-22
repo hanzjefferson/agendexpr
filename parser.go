@@ -34,21 +34,21 @@ func parseToken[T expressionMask](tok string, bounds []uint8) (T, error) {
 		var partResult, filter T
 
 		if before, after, ok := strings.Cut(part, "/"); ok {
-			step, err := parseDigits[uint8](after)
+			step, err := parseDigits(after)
 			if err != nil {
 				return 0, err
 			}
-			
+
 			filter |= stepMask[T](bounds[1], step)
 			part = before
 		}
 
 		if before, after, ok := strings.Cut(part, "-"); ok {
-			min, err := parseDigits[uint8](before)
+			min, err := parseDigits(before)
 			if err != nil {
 				return 0, err
 			}
-			max, err := parseDigits[uint8](after)
+			max, err := parseDigits(after)
 			if err != nil {
 				return 0, err
 			}
@@ -56,7 +56,7 @@ func parseToken[T expressionMask](tok string, bounds []uint8) (T, error) {
 		} else if part == "*" {
 			partResult |= fillMask[T](bounds[0], bounds[1])
 		} else {
-			num, err := parseDigits[T](part)
+			num, err := parseDigits(part)
 			if err != nil {
 				return 0, err
 			}
