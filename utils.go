@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrParseDigits = errors.New("unable to parse digits")
+	ErrOverflow = errors.New("value out of range for uint8 (overflow)")
 )
 
 
@@ -18,7 +19,12 @@ func parseDigits(str string) (uint8, error) {
 			return 0, ErrParseDigits
 		}
 
-		result = (result * 10) + uint8(str[i]-'0')
+		digit := uint8(str[i] - '0')
+		if result > 25 || (result == 25 && digit > 5) {
+			return 0, ErrOverflow
+		}
+
+		result = (result * 10) + digit
 	}
 	return result, nil
 }
