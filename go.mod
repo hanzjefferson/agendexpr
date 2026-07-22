@@ -1,4 +1,4 @@
-module github.com/hanzjefferson/agend-expr
+module github.com/hanzjefferson/agendexpr
 
 go 1.26.4
 

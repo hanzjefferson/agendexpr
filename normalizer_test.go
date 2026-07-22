@@ -1,4 +1,4 @@
-package gronexpr
+package agendexpr
 
 import (
 	"strings"
@@ -43,12 +43,6 @@ func TestNormalizer(t *testing.T) {
 			expr:        "0 0 0 * * sun *",
 			expectError: nil,
 			expectVal:   "0 0 0 * * 0 *",
-		},
-		{
-			name:        "literal test 3",
-			expr:        "0 0 sun * * * *",
-			expectError: ErrUnexpectedLiteral,
-			expectVal:   "",
 		},
 		{
 			name:        "shortcut test 1",

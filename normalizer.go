@@ -1,4 +1,4 @@
-package gronexpr
+package agendexpr
 
 import (
 	"errors"
@@ -46,7 +46,6 @@ var (
 	ErrUnknownAlias      = errors.New("unknown alias for an expression")
 	ErrInvalidFormat     = errors.New("invalid format")
 	ErrEmptyExpr         = errors.New("empty expression not allowed")
-	ErrUnexpectedLiteral = errors.New("uexpected literal position")
 )
 
 func normalize(expr string) ([]string, error) {
@@ -68,18 +67,6 @@ func normalize(expr string) ([]string, error) {
 	toks := strings.Fields(expr)
 	if len(toks) > 7 {
 		return nil, ErrInvalidFormat
-	}
-
-	for i, tok := range toks {
-		if i == 4 || i == 5 {
-			continue
-		}
-
-		for i := 0; i < len(tok); i++ {
-			if (tok[i] >= 'a' && tok[i] <= 'z') || (tok[i] >= 'A' && tok[i] <= 'Z') {
-				return nil, ErrUnexpectedLiteral
-			}
-		}
 	}
 
 	if len(toks) >= 5 {
