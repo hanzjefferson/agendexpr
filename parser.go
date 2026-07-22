@@ -43,7 +43,7 @@ func parseToken[T expressionMask](tok string, bounds []uint8) (T, error) {
 			part = before
 		}
 
-		if before, after, ok := strings.Cut(part, "-"); ok {
+		if before, after, ok := strings.Cut(part, "-"); ok && before != "" {
 			min, err := parseDigits(before)
 			if err != nil {
 				return 0, err
