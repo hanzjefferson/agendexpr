@@ -2,11 +2,12 @@ package agendexpr
 
 import (
 	"errors"
+	"math/bits"
 	"strings"
 )
 
 var (
-	bounds = [][]uint8{
+	bounds = [][2]uint8{
 		{0, 59},
 		{0, 59},
 		{0, 23},
@@ -20,13 +21,10 @@ var (
 	ErrNumberOutOfBounds = errors.New("number was out of bounds")
 )
 
-type expressionMask interface {
-	~uint8 | ~uint16 | ~uint32 | ~uint64
-}
 
-func parseToken[T expressionMask](tok string, bounds []uint8) (T, error) {
+func parseToken[T tokenMask](tok string, bounds [2]uint8) (T, [2]uint8, error) {
 	if tok == "*" {
-		return fillMask[T](bounds[0], bounds[1]), nil
+		return fillMask[T](bounds[0], bounds[1]), bounds, nil
 	}
 	var result T
 
@@ -39,10 +37,10 @@ func parseToken[T expressionMask](tok string, bounds []uint8) (T, error) {
 		if before, after, ok := strings.Cut(part, "/"); ok {
 			step, err = parseDigits(after)
 			if err != nil {
-				return 0, err
+				return 0, [2]uint8{}, err
 			}
 			if step < 1 {
-				return 0, ErrParseDigits
+				return 0, [2]uint8{}, ErrParseDigits
 			}
 			part = before
 		}
@@ -50,19 +48,19 @@ func parseToken[T expressionMask](tok string, bounds []uint8) (T, error) {
 		if before, after, ok := strings.Cut(part, "-"); ok && before != "" {
 			min, err = parseDigits(before)
 			if err != nil {
-				return 0, err
+				return 0, [2]uint8{}, err
 			}
 			max, err = parseDigits(after)
 			if err != nil {
-				return 0, err
+				return 0, [2]uint8{}, err
 			}
 		} else if part != "*" {
 			num, err := parseDigits(part)
 			if err != nil {
-				return 0, err
+				return 0, [2]uint8{}, err
 			}
 			if num < bounds[0] || num > bounds[1] {
-				return 0, ErrNumberOutOfBounds
+				return 0, [2]uint8{}, ErrNumberOutOfBounds
 			}
 			if step >= 1 {
 				min = num
@@ -78,7 +76,17 @@ func parseToken[T expressionMask](tok string, bounds []uint8) (T, error) {
 			result |= fillMask[T](min, max)
 		}
 	}
-	return result, nil
+    if result == 0 {
+		return 0, [2]uint8{0, 0}, nil 
+    }
+	
+	mask := uint64(result)
+
+    resultRange := [2]uint8{
+        uint8(bits.TrailingZeros64(mask)), // Min: jumlah 0 di sebelah kanan bit pertama
+        uint8(bits.Len64(mask) - 1),       // Max: panjang bit dikurangi 1
+    }
+	return result, resultRange, nil
 }
 
 func parseDigits(str string) (uint8, error) {
@@ -102,43 +110,14 @@ func parseDigits(str string) (uint8, error) {
 	return result, nil
 }
 
-func fillMask[T expressionMask](min, max uint8) T {
+func fillMask[T tokenMask](min, max uint8) T {
 	return 1<<(max+1) - 1<<min
 }
 
-func stepMask[T expressionMask](min, max, step uint8) T {
+func stepMask[T tokenMask](min, max, step uint8) T {
 	var result T
 	for stepIdx := min; stepIdx < max; stepIdx += step {
 		result |= 1 << stepIdx
 	}
 	return result
-}
-
-
-func parseSeconds(tok string) (uint64, error) {
-	return parseToken[uint64](tok, bounds[0])
-}
-
-func parseMinutes(tok string) (uint64, error) {
-	return parseToken[uint64](tok, bounds[1])
-}
-
-func parseHours(tok string) (uint32, error) {
-	return parseToken[uint32](tok, bounds[2])
-}
-
-func parseDaysOfMonth(tok string) (uint32, error) {
-	return parseToken[uint32](tok, bounds[3])
-}
-
-func parseMonths(tok string) (uint16, error) {
-	return parseToken[uint16](tok, bounds[4])
-}
-
-func parseDaysOfWeek(tok string) (uint8, error) {
-	return parseToken[uint8](tok, bounds[5])
-}
-
-func parseYears(tok string) (uint64, error) {
-	return parseToken[uint64](tok, bounds[0])
 }
