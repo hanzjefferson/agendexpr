@@ -126,3 +126,11 @@ func TestParseToken(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkParseToken(b *testing.B) {
+	bounds := [2]uint8{0, 59}
+    
+	for b.Loop() {
+		_, _, _ = parseToken[uint64]("1-5,10/2,50-59", bounds)
+	}
+}
