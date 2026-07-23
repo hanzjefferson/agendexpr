@@ -6,16 +6,15 @@ import (
 )
 
 var (
-	aliases = map[string][7]string{
-		"yearly":    {"0", "0", "0", "1", "1", "*", "*"},
-		"monthly":   {"0", "0", "0", "1", "*", "*", "*"},
-		"weekly":    {"0", "0", "0", "*", "*", "0", "*"},
-		"hourly":    {"0", "0", "*", "*", "*", "*", "*"},
-		"minutely":  {"0", "*", "*", "*", "*", "*", "*"},
-		"5minutes":  {"0", "*/5", "*", "*", "*", "*", "*"},
-		"10minutes": {"0", "*/10", "*", "*", "*", "*", "*"},
-		"30minutes": {"0", "*/30", "*", "*", "*", "*", "*"},
-		"ticks":     {"*", "*", "*", "*", "*", "*", "*"},
+	aliases = map[string][6]string{
+		"monthly":   {"0", "0", "0", "1", "*", "*"},
+		"weekly":    {"0", "0", "0", "*", "*", "0"},
+		"hourly":    {"0", "0", "*", "*", "*", "*"},
+		"minutely":  {"0", "*", "*", "*", "*", "*"},
+		"5minutes":  {"0", "*/5", "*", "*", "*", "*"},
+		"10minutes": {"0", "*/10", "*", "*", "*", "*"},
+		"30minutes": {"0", "*/30", "*", "*", "*", "*"},
+		"ticks":     {"*", "*", "*", "*", "*", "*"},
 	}
 
 	ErrUnknownAlias  = errors.New("unknown alias for an expression")
@@ -23,7 +22,7 @@ var (
 	ErrEmptyExpr     = errors.New("empty expression not allowed")
 )
 
-func parseMonth(s string) string {
+func normalizeMonth(s string) string {
 	if len(s) == 3 {
 		switch {
 		case strings.EqualFold(s, "jan"):
@@ -55,8 +54,7 @@ func parseMonth(s string) string {
 	return s
 }
 
-// Helper untuk parse hari tanpa alokasi
-func parseDow(s string) string {
+func normalizeDow(s string) string {
 	if len(s) == 3 {
 		switch {
 		case strings.EqualFold(s, "sun"):
@@ -78,17 +76,17 @@ func parseDow(s string) string {
 	return s
 }
 
-func normalize(expr string) ([7]string, error) {
+func normalize(expr string) ([6]string, error) {
 	expr = strings.TrimSpace(expr)
 	if expr == "" {
-		return [7]string{}, ErrEmptyExpr
+		return [6]string{}, ErrEmptyExpr
 	}
 
 	// resolve '@' prefix
 	if expr[0] == '@' {
 		alias, ok := aliases[strings.ToLower(expr[1:])]
 		if !ok {
-			return [7]string{}, ErrUnknownAlias
+			return [6]string{}, ErrUnknownAlias
 		}
 		return alias, nil
 	}
@@ -98,22 +96,22 @@ func normalize(expr string) ([7]string, error) {
 		start int = -1
 		count int
 	)
-	for i, c := range expr {
-		space := i == len(expr) || c == ' ' || c == '\t'
+	for i := 0; i <= len(expr); i++ {
+		space := i == len(expr) || expr[i] == ' ' || expr[i] == '\t'
 
 		if space {
 			if start != -1 {
-				if count >= 7 {
-					return [7]string{}, ErrInvalidFormat
+				if count >= 6 {
+					return [6]string{}, ErrInvalidFormat
 				}
 
 				tok := expr[start:i]
 
 				switch count {
 				case 4:
-					tok = parseMonth(tok)
+					tok = normalizeMonth(tok)
 				case 5:
-					tok = parseDow(tok)
+					tok = normalizeDow(tok)
 				}
 
 				res[count] = tok
