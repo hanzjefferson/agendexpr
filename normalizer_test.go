@@ -78,7 +78,13 @@ func TestNormalizer(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, test.expectVal, strings.Join(res, " "))
+			assert.Equal(t, test.expectVal, strings.Join(res[:], " "))
 		})
+	}
+}
+
+func BenchmarkNormalizer(b *testing.B) {
+	for b.Loop() {
+		_, _ = normalize("1-5 10/2 0-59 * JUL FRI")
 	}
 }
