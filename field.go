@@ -2,27 +2,27 @@ package agendexpr
 
 import "math/bits"
 
-type tokenMask interface {
+type fieldMask interface {
 	~uint8 | ~uint16 | ~uint32 | ~uint64
 }
 
-type Token[T tokenMask] struct {
+type Field[T fieldMask] struct {
 	Value T
 	Range [2]uint8
 }
 
-func ParseToken[T tokenMask](tok string, bounds [2]uint8) (Token[T], error) {
-	val, r, err := parseToken[T](tok, bounds)
+func ParseField[T fieldMask](tok string, bounds [2]uint8) (Field[T], error) {
+	val, r, err := parseField[T](tok, bounds)
 	if err != nil {
-		return Token[T]{}, err
+		return Field[T]{}, err
 	}
-	return Token[T]{
+	return Field[T]{
 		Value: val,
 		Range: r,
 	}, nil
 }
 
-func (t Token[T]) Next(from uint8) int {
+func (t Field[T]) Next(from uint8) int {
 	if t.Value == 0 {
 		return -1
 	}
@@ -42,14 +42,14 @@ func (t Token[T]) Next(from uint8) int {
 	return bits.TrailingZeros64(uint64(t.Value))
 }
 
-func (t Token[T]) Match(val uint8) bool {
+func (t Field[T]) Match(val uint8) bool {
 	if val < t.Range[0] || val > t.Range[1] {
 		return false
 	}
 	return (t.Value & (T(1) << val)) != 0
 }
 
-func (t Token[T]) List() []uint8 {
+func (t Field[T]) List() []uint8 {
 	var result []uint8
 	v := uint64(t.Value)
 	

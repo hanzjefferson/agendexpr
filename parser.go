@@ -23,10 +23,10 @@ var (
 	ErrNumberOutOfBounds = errors.New("number was out of bounds")
 )
 
-// parseToken parses a single cron field token (e.g. "*/5", "1-5", "0,30")
+// parseField parses a single cron field field (e.g. "*/5", "1-5", "0,30")
 // into a bitmask with the corresponding positions set, and returns the
 // effective [min, max] of the set bits. Zero heap allocations.
-func parseToken[T tokenMask](tok string, fieldBounds [2]uint8) (T, [2]uint8, error) {
+func parseField[T fieldMask](tok string, fieldBounds [2]uint8) (T, [2]uint8, error) {
 	if tok == "*" {
 		return fillMask[T](fieldBounds[0], fieldBounds[1]), fieldBounds, nil
 	}
@@ -123,7 +123,7 @@ func parseDigits(str string) (uint8, error) {
 // Using T(1) instead of an untyped 1 ensures shifts stay within the type's
 // domain: e.g. uint64(1)<<64 wraps to 0, making the subtraction produce the
 // correct all-bits-set mask for a full-width T.
-func fillMask[T tokenMask](min, max uint8) T {
+func fillMask[T fieldMask](min, max uint8) T {
 	return T(1)<<(max+1) - T(1)<<min
 }
 
@@ -131,7 +131,7 @@ func fillMask[T tokenMask](min, max uint8) T {
 // starting from min, up to (but not including) max.
 // NOTE: the upper bound is exclusive; this is intentional and matches
 // the existing package semantics (a half-open [min, max) range with step).
-func stepMask[T tokenMask](min, max, step uint8) T {
+func stepMask[T fieldMask](min, max, step uint8) T {
 	var result T
 	for i := min; i < max; i += step {
 		result |= T(1) << i
