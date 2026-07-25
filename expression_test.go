@@ -18,25 +18,25 @@ func TestExpression(t *testing.T) {
 			expr: "* * * * * *",
 		},
 		{
-			name: "invalid format",
-			expr: "* * * * * * *",
+			name:      "invalid format",
+			expr:      "* * * * * * *",
 			expectErr: ErrInvalidFormat,
 		},
 		{
-			name: "empty",
-			expr: "",
-			expectErr: ErrEmptyExpr,
+			name:      "empty",
+			expr:      "",
+			expectErr: ErrEmpty,
 		},
 		{
-			name: "invalid digits",
-			expr: "-8",
+			name:      "invalid digits",
+			expr:      "-8",
 			expectErr: ErrParseDigits,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := NewExpression(test.expr)
+			_, err := Parse(test.expr)
 			if test.expectErr != nil {
 				assert.ErrorIs(t, err, test.expectErr)
 			} else {
@@ -71,7 +71,7 @@ func TestExpression_Next(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			expr, err := NewExpression(test.expr)
+			expr, err := Parse(test.expr)
 			assert.NoError(t, err)
 
 			got := expr.Next(test.from)
@@ -88,13 +88,13 @@ func TestExpression_DueMonth(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "Match month",
+			name: "match",
 			expr: "* * * * 7 *",
 			of:   time.Date(2026, 7, 24, 10, 0, 0, 0, time.UTC),
 			want: true,
 		},
 		{
-			name: "Mismatch month",
+			name: "mismatch",
 			expr: "* * * * 8 *",
 			of:   time.Date(2026, 7, 24, 10, 0, 0, 0, time.UTC),
 			want: false,
@@ -103,7 +103,7 @@ func TestExpression_DueMonth(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			expr, err := NewExpression(test.expr)
+			expr, err := Parse(test.expr)
 			assert.NoError(t, err)
 
 			got := expr.DueMonth(test.of)
@@ -135,7 +135,7 @@ func TestExpression_DueDay(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			expr, err := NewExpression(test.expr)
+			expr, err := Parse(test.expr)
 			assert.NoError(t, err)
 
 			got := expr.DueDay(test.of)
@@ -167,7 +167,7 @@ func TestExpression_DueHour(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			expr, err := NewExpression(test.expr)
+			expr, err := Parse(test.expr)
 			assert.NoError(t, err)
 
 			got := expr.DueHour(test.of)
@@ -199,7 +199,7 @@ func TestExpression_DueMinute(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			expr, err := NewExpression(test.expr)
+			expr, err := Parse(test.expr)
 			assert.NoError(t, err)
 
 			got := expr.DueMinute(test.of)
@@ -231,7 +231,7 @@ func TestExpression_Due(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			expr, err := NewExpression(test.expr)
+			expr, err := Parse(test.expr)
 			assert.NoError(t, err)
 
 			got := expr.Due(test.of)
@@ -265,7 +265,7 @@ func TestExpression_Countdown(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			expr, err := NewExpression(test.expr)
+			expr, err := Parse(test.expr)
 			assert.NoError(t, err)
 
 			got := expr.Countdown(test.from)
@@ -274,16 +274,14 @@ func TestExpression_Countdown(t *testing.T) {
 	}
 }
 
-func BenchmarkNewExpression(b *testing.B) {
-	exprStr := "0 15 10 1 * *"
-
+func BenchmarkParse(b *testing.B) {
 	for b.Loop() {
-		_, _ = NewExpression(exprStr)
+		_, _ = Parse("0 15 10 1 * *")
 	}
 }
 
 func BenchmarkExpression_Next(b *testing.B) {
-	expr, _ := NewExpression("0 0 1 1 * *")
+	expr, _ := Parse("0 0 1 1 * *")
 	baseTime := time.Date(2026, 7, 24, 10, 0, 0, 0, time.UTC)
 
 	for b.Loop() {
@@ -292,7 +290,7 @@ func BenchmarkExpression_Next(b *testing.B) {
 }
 
 func BenchmarkExpression_Due(b *testing.B) {
-	expr, _ := NewExpression("30 15 14 * * *")
+	expr, _ := Parse("30 15 14 * * *")
 	checkTime := time.Date(2026, 7, 24, 14, 15, 30, 0, time.UTC)
 
 	for b.Loop() {

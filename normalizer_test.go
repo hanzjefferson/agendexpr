@@ -17,7 +17,7 @@ func TestNormalizer(t *testing.T) {
 		{
 			name:        "empty expression test",
 			expr:        "",
-			expectError: ErrEmptyExpr,
+			expectError: ErrEmpty,
 			expectVal:   "",
 		},
 		{

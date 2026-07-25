@@ -1,25 +1,20 @@
 package agendexpr
 
 import (
-	"errors"
 	"strings"
 )
 
 var (
-	aliases = map[string][6]string{
-		"monthly":   {"0", "0", "0", "1", "*", "*"},
-		"weekly":    {"0", "0", "0", "*", "*", "0"},
-		"hourly":    {"0", "0", "*", "*", "*", "*"},
-		"minutely":  {"0", "*", "*", "*", "*", "*"},
-		"5minutes":  {"0", "*/5", "*", "*", "*", "*"},
-		"10minutes": {"0", "*/10", "*", "*", "*", "*"},
-		"30minutes": {"0", "*/30", "*", "*", "*", "*"},
-		"ticks":     {"*", "*", "*", "*", "*", "*"},
-	}
-
-	ErrUnknownAlias  = errors.New("unknown alias for an expression")
-	ErrInvalidFormat = errors.New("invalid format")
-	ErrEmptyExpr     = errors.New("empty expression not allowed")
+    aliases = map[string][6]string{
+        "monthly":   [6]string(strings.Fields(MonthlyAlias)),
+        "weekly":    [6]string(strings.Fields(WeeklyAlias)),
+        "hourly":    [6]string(strings.Fields(HourlyAlias)),
+        "minutely":  [6]string(strings.Fields(MinutelyAlias)),
+        "5minutes":  [6]string(strings.Fields(FiveMinutesAlias)),
+        "10minutes": [6]string(strings.Fields(TenMinutesAlias)),
+        "30minutes": [6]string(strings.Fields(HalfMinutesAlias)),
+        "ticks":     [6]string(strings.Fields(TicksAlias)),
+    }
 )
 
 func normalizeMonth(s string) string {
@@ -79,7 +74,7 @@ func normalizeDow(s string) string {
 func normalize(expr string) ([6]string, error) {
 	expr = strings.TrimSpace(expr)
 	if expr == "" {
-		return [6]string{}, ErrEmptyExpr
+		return [6]string{}, ErrEmpty
 	}
 
 	// resolve '@' prefix

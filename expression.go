@@ -5,59 +5,16 @@ import (
 )
 
 type Expression struct {
-	seconds    Field[uint64]
-	minutes    Field[uint64]
-	hours      Field[uint32]
-	dayOfMonth Field[uint32]
-	months     Field[uint16]
-	dayOfWeek  Field[uint8]
-}
-
-func NewExpression(expr string) (Expression, error) {
-	toks, err := normalize(expr)
-	if err != nil {
-		return Expression{}, err
-	}
-
-	seconds, err := ParseField[uint64](toks[0], bounds[0])
-	if err != nil {
-		return Expression{}, err
-	}
-
-	minutes, err := ParseField[uint64](toks[1], bounds[1])
-	if err != nil {
-		return Expression{}, err
-	}
-	hours, err := ParseField[uint32](toks[2], bounds[2])
-	if err != nil {
-		return Expression{}, err
-	}
-	daysOfMonth, err := ParseField[uint32](toks[3], bounds[3])
-	if err != nil {
-		return Expression{}, err
-	}
-	months, err := ParseField[uint16](toks[4], bounds[4])
-	if err != nil {
-		return Expression{}, err
-	}
-	daysOfWeek, err := ParseField[uint8](toks[5], bounds[5])
-	if err != nil {
-		return Expression{}, err
-	}
-
-	return Expression{
-		seconds:    seconds,
-		minutes:    minutes,
-		hours:      hours,
-		dayOfMonth: daysOfMonth,
-		months:     months,
-		dayOfWeek:  daysOfWeek,
-	}, nil
+	seconds    Mask[uint64]
+	minutes    Mask[uint64]
+	hours      Mask[uint32]
+	dayOfMonth Mask[uint32]
+	months     Mask[uint16]
+	dayOfWeek  Mask[uint8]
 }
 
 func (expr Expression) Next(from time.Time) time.Time {
 	loc := from.Location()
- 
 	t := from.Truncate(time.Second).Add(time.Second)
  
 	limit := t.AddDate(4, 0, 0)
@@ -72,10 +29,7 @@ func (expr Expression) Next(from time.Time) time.Time {
  
 		if !expr.months.Match(uint8(mon)) {
 			next := expr.months.Next(uint8(mon))
-			if next == -1 {
-				return time.Time{}
-			}
-			if next < mon {
+			if next < uint8(mon) {
 				yr++
 			}
 			t = time.Date(yr, time.Month(next), 1, 0, 0, 0, 0, loc)
@@ -89,39 +43,30 @@ func (expr Expression) Next(from time.Time) time.Time {
  
 		if !expr.hours.Match(uint8(hr)) {
 			next := expr.hours.Next(uint8(hr))
-			if next == -1 {
-				return time.Time{}
-			}
-			if next < hr {
+			if next < uint8(hr) {
 				t = time.Date(yr, time.Month(mon), dom+1, 0, 0, 0, 0, loc)
 			} else {
-				t = time.Date(yr, time.Month(mon), dom, next, 0, 0, 0, loc)
+				t = time.Date(yr, time.Month(mon), dom, int(next), 0, 0, 0, loc)
 			}
 			continue
 		}
  
 		if !expr.minutes.Match(uint8(min)) {
 			next := expr.minutes.Next(uint8(min))
-			if next == -1 {
-				return time.Time{}
-			}
-			if next < min {
+			if next < uint8(min) {
 				t = time.Date(yr, time.Month(mon), dom, hr+1, 0, 0, 0, loc)
 			} else {
-				t = time.Date(yr, time.Month(mon), dom, hr, next, 0, 0, loc)
+				t = time.Date(yr, time.Month(mon), dom, hr, int(next), 0, 0, loc)
 			}
 			continue
 		}
  
 		if !expr.seconds.Match(uint8(sec)) {
 			next := expr.seconds.Next(uint8(sec))
-			if next == -1 {
-				return time.Time{}
-			}
-			if next < sec {
+			if next < uint8(sec) {
 				t = time.Date(yr, time.Month(mon), dom, hr, min+1, 0, 0, loc)
 			} else {
-				t = time.Date(yr, time.Month(mon), dom, hr, min, next, 0, loc)
+				t = time.Date(yr, time.Month(mon), dom, hr, min, int(next), 0, loc)
 			}
 			continue
 		}
@@ -160,4 +105,8 @@ func (expr Expression) Countdown(from time.Time) int64 {
 		return -1
 	}
 	return next.Unix() - from.Unix()
+}
+
+func (expr Expression) CountdownNow() int64 {
+	return expr.Countdown(time.Now())
 }
