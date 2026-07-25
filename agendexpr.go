@@ -2,6 +2,8 @@ package agendexpr
 
 import "strings"
 
+// ParseSecond parses a seconds field token (e.g. "0", "*/5", "1,15,30")
+// into a [Mask] with valid second values (0–59) set.
 func ParseSecond(tok string) (Mask[uint64], error) {
 	raw, err := parseField[uint64](tok, SecondBound)
 	if err != nil {
@@ -12,6 +14,8 @@ func ParseSecond(tok string) (Mask[uint64], error) {
 	}, nil
 }
 
+// MustParseSecond is like [ParseSecond] but panics on error.
+// Intended for use in tests and static expressions.
 func MustParseSecond(tok string) Mask[uint64] {
 	raw, err := parseField[uint64](tok, SecondBound)
 	if err != nil {
@@ -22,6 +26,8 @@ func MustParseSecond(tok string) Mask[uint64] {
 	}
 }
 
+// ParseMinute parses a minutes field token (e.g. "0", "*/15", "0,30")
+// into a [Mask] with valid minute values (0–59) set.
 func ParseMinute(tok string) (Mask[uint64], error) {
 	raw, err := parseField[uint64](tok, MinuteBound)
 	if err != nil {
@@ -32,6 +38,8 @@ func ParseMinute(tok string) (Mask[uint64], error) {
 	}, nil
 }
 
+// MustParseMinute is like [ParseMinute] but panics on error.
+// Intended for use in tests and static expressions.
 func MustParseMinute(tok string) Mask[uint64] {
 	raw, err := parseField[uint64](tok, MinuteBound)
 	if err != nil {
@@ -42,6 +50,8 @@ func MustParseMinute(tok string) Mask[uint64] {
 	}
 }
 
+// ParseHour parses an hours field token (e.g. "0", "8", "*/2")
+// into a [Mask] with valid hour values (0–23) set.
 func ParseHour(tok string) (Mask[uint32], error) {
 	raw, err := parseField[uint32](tok, HourBound)
 	if err != nil {
@@ -52,6 +62,8 @@ func ParseHour(tok string) (Mask[uint32], error) {
 	}, nil
 }
 
+// MustParseHour is like [ParseHour] but panics on error.
+// Intended for use in tests and static expressions.
 func MustParseHour(tok string) Mask[uint32] {
 	raw, err := parseField[uint32](tok, HourBound)
 	if err != nil {
@@ -62,6 +74,8 @@ func MustParseHour(tok string) Mask[uint32] {
 	}
 }
 
+// ParseDayOfMonth parses a day-of-month field token (e.g. "1", "15", "1-10")
+// into a [Mask] with valid day-of-month values (1–31) set.
 func ParseDayOfMonth(tok string) (Mask[uint32], error) {
 	raw, err := parseField[uint32](tok, DayOfMonthBound)
 	if err != nil {
@@ -72,6 +86,8 @@ func ParseDayOfMonth(tok string) (Mask[uint32], error) {
 	}, nil
 }
 
+// MustParseDayOfMonth is like [ParseDayOfMonth] but panics on error.
+// Intended for use in tests and static expressions.
 func MustParseDayOfMonth(tok string) Mask[uint32] {
 	raw, err := parseField[uint32](tok, DayOfMonthBound)
 	if err != nil {
@@ -82,6 +98,9 @@ func MustParseDayOfMonth(tok string) Mask[uint32] {
 	}
 }
 
+// ParseMonth parses a month field token (e.g. "1", "JUL", "*/3")
+// into a [Mask] with valid month values (1–12) set.
+// Month names (JAN–DEC) are case-insensitive.
 func ParseMonth(tok string) (Mask[uint16], error) {
 	raw, err := parseField[uint16](tok, MonthBound)
 	if err != nil {
@@ -92,6 +111,8 @@ func ParseMonth(tok string) (Mask[uint16], error) {
 	}, nil
 }
 
+// MustParseMonth is like [ParseMonth] but panics on error.
+// Intended for use in tests and static expressions.
 func MustParseMonth(tok string) Mask[uint16] {
 	raw, err := parseField[uint16](tok, MonthBound)
 	if err != nil {
@@ -102,6 +123,9 @@ func MustParseMonth(tok string) Mask[uint16] {
 	}
 }
 
+// ParseDayOfWeek parses a day-of-week field token (e.g. "0", "FRI", "1-5")
+// into a [Mask] with valid day-of-week values (0–6) set.
+// Day names (SUN–SAT) are case-insensitive.
 func ParseDayOfWeek(tok string) (Mask[uint8], error) {
 	raw, err := parseField[uint8](tok, DayOfWeekBound)
 	if err != nil {
@@ -112,6 +136,8 @@ func ParseDayOfWeek(tok string) (Mask[uint8], error) {
 	}, nil
 }
 
+// MustParseDayOfWeek is like [ParseDayOfWeek] but panics on error.
+// Intended for use in tests and static expressions.
 func MustParseDayOfWeek(tok string) Mask[uint8] {
 	raw, err := parseField[uint8](tok, DayOfWeekBound)
 	if err != nil {
@@ -122,6 +148,20 @@ func MustParseDayOfWeek(tok string) Mask[uint8] {
 	}
 }
 
+// Parse parses a 6-field cron-like expression string into an [Expression].
+//
+// The format is: "second minute hour day-of-month month day-of-week"
+//
+// Each field supports: single values (5), wildcards (*), ranges (1-5),
+// steps (*/15, 1-30/5), and comma-separated lists (1,15,30).
+// Month and day-of-week names are case-insensitive.
+//
+// Named aliases (e.g. "@hourly", "@daily") are also supported.
+// Returns an error if the expression is malformed or contains out-of-bound values.
+//
+// Example:
+//
+//	expr, err := agendexpr.Parse("0 30 8 * * *") // every day at 08:30:00
 func Parse(expr string) (Expression, error) {
 	toks, err := normalize(expr)
 	if err != nil {
@@ -164,6 +204,12 @@ func Parse(expr string) (Expression, error) {
 	}, nil
 }
 
+// MustParse is like [Parse] but panics on error.
+// Intended for use in tests and static expressions where the input is known to be valid.
+//
+// Example:
+//
+//	expr := agendexpr.MustParse("0 30 8 * * *")
 func MustParse(expr string) Expression {
 	toks, err := normalize(expr)
 	if err != nil {
@@ -187,6 +233,15 @@ func MustParse(expr string) Expression {
 	}
 }
 
+// Alias resolves a named alias (case-insensitive) to its full 6-field expression string.
+// Returns the expression and true if the alias is recognized, or ("", false) otherwise.
+//
+// Supported aliases: "ticks", "minutely", "5minutes", "10minutes", "30minutes",
+// "hourly", "daily", "weekly", "monthly".
+//
+// Example:
+//
+//	expr, ok := agendexpr.Alias("hourly") // expr = "0 0 * * * *", ok = true
 func Alias(input string) (string, bool) {
 	switch {
 	case strings.EqualFold(input, "monthly"):
