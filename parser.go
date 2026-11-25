@@ -131,7 +131,7 @@ func fillMask[T MaskType](min, max uint8) T {
 
 func stepMask[T MaskType](min, max, step uint8) T {
 	var result T
-	for i := min; i < max; i += step {
+	for i := min; i <= max; i += step {
 		result |= T(1) << i
 	}
 	return result
