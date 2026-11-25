@@ -106,6 +106,20 @@ func TestParseField(t *testing.T) {
 			expectVal:   1<<55 | 1<<57 | 1<<59,
 		},
 		{
+			name:        "step larger than remaining range does not wrap",
+			field:       "55/250",
+			bound:       [2]uint8{0, 59},
+			expectError: nil,
+			expectVal:   1 << 55,
+		},
+		{
+			name:        "maximum step does not wrap",
+			field:       "59/255",
+			bound:       [2]uint8{0, 59},
+			expectError: nil,
+			expectVal:   1 << 59,
+		},
+		{
 			name:        "step test 4",
 			field:       "1-10/-2",
 			bound:       [2]uint8{0, 59},
