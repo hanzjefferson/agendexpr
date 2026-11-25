@@ -67,6 +67,12 @@ func TestExpression_Next(t *testing.T) {
 			from:     baseTime.Add(time.Second * 30),
 			wantTime: baseTime.Add(time.Second * 30).Truncate(time.Minute).Add(time.Minute),
 		},
+		{
+			name:     "hourly step reaches last hour",
+			expr:     "0 0 */1 * * *",
+			from:     time.Date(2026, 7, 24, 22, 30, 0, 0, time.UTC),
+			wantTime: time.Date(2026, 7, 24, 23, 0, 0, 0, time.UTC),
+		},
 	}
 
 	for _, test := range tests {
